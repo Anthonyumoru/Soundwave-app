@@ -25,12 +25,14 @@ jobs:
           openjdk-17-jdk \
           unzip \
           zip \
-          libncurses5 \
+          libncurses6 \
           libstdc++6 \
           zlib1g \
           python3-pip \
           python3-setuptools \
-          build-essential
+          build-essential \
+          libffi-dev \
+          libssl-dev
         
     - name: Install Android SDK
       run: |
