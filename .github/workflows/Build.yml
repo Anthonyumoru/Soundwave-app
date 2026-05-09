@@ -2,22 +2,22 @@ name: Build APK
 
 on:
   push:
-    branches: 
+    branches: [main]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
-        
+
     - name: Install system dependencies
       run: |
         sudo apt-get update
@@ -29,4 +29,50 @@ jobs:
           libstdc++6 \
           zlib1g \
           python3-pip \
-          python3-setuptools
+          python3-setuptools \
+          build-essential \
+          libffi-dev \
+          libssl-dev
+
+    - name: Install Android SDK
+      run: |
+        sudo apt-get install -y unzip wget
+        export ANDROID_HOME=$HOME/android
+        mkdir -p $ANDROID_HOME/cmdline-tools
+        cd $ANDROID_HOME/cmdline-tools
+        wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdtools.zip
+        unzip -q cmdtools.zip
+        mkdir -p latest
+        mv cmdline-tools/* latest/ 2>/dev/null || true
+
+        echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+        echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
+        echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
+        echo "$ANDROID_HOME/build-tools/33.0.2" >> $GITHUB_PATH
+
+        yes | sdkmanager --licenses
+        sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+
+        ls -la $ANDROID_HOME/build-tools/33.0.2/ | grep aidl
+
+    - name: Install Python dependencies
+      run: |
+        pip install --upgrade pip
+        pip install buildozer cython
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Build APK
+      run: |
+        echo "Checking buildozer version:"
+        buildozer --version
+        echo "Starting build:"
+        buildozer android debug
+        echo "Checking bin folder:"
+        ls -la bin/ || echo "bin folder not found"
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: soundwave-apk
+        path: bin/*.apk
+        if-no-files-found: error
