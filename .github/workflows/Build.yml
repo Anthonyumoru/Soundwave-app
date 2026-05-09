@@ -18,8 +18,29 @@ jobs:
       with:
         python-version: '3.11'
         
-    - name: Install dependencies
+    - name: Install system dependencies
       run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          openjdk-17-jdk \
+          unzip \
+          zip \
+          libncurses5 \
+          libstdc++6 \
+          zlib1g \
+          python3-pip \
+          python3-setuptools \
+          build-essential
+        
+    - name: Install Android SDK
+      run: |
+        sudo apt-get install -y android-sdk
+        yes | sudo sdkmanager --licenses || true
+        sudo sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+        
+    - name: Install Python dependencies
+      run: |
+        pip install --upgrade pip
         pip install buildozer cython
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         
