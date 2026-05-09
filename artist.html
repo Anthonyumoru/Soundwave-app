@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ artist_name }} — {{ app_name }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d0d0f; --surface: #17171b; --surface-hover: #1f1f25;
+      --border: #2a2a32; --orange: #ff6b1a; --orange-dark: #d95400;
+      --orange-glow: rgba(255,107,26,.18); --gold: #f5c518;
+      --text: #f0f0f4; --text-muted: #8a8a9a; --radius: 14px; --player-h: 90px;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text);
+      min-height: 100vh; padding-bottom: calc(var(--player-h) + 16px); }
+
+    /* ── HEADER ── */
+    header { position: sticky; top: 0; z-index: 200; background: rgba(13,13,15,.92);
+      backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); padding: 0 24px; }
+    .header-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center;
+      height: 64px; gap: 14px; }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; }
+    .logo-icon { width: 36px; height: 36px; background: var(--orange); border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; }
+    .logo-icon svg { width: 20px; height: 20px; fill: #fff; }
+    .logo-text { font-size: 1.2rem; font-weight: 800; letter-spacing: -.5px; color: var(--text); }
+    .logo-text span { color: var(--orange); }
+    .btn-back { display: flex; align-items: center; gap: 6px; background: none;
+      border: 1px solid var(--border); border-radius: 20px; padding: 7px 14px;
+      font-size: .78rem; font-weight: 600; font-family: 'Inter',sans-serif; color: var(--text-muted);
+      cursor: pointer; text-decoration: none; transition: border-color .2s, color .2s; }
+    .btn-back:hover { border-color: var(--orange); color: var(--orange); }
+    .btn-back svg { width: 14px; height: 14px; fill: currentColor; }
+    .header-spacer { flex: 1; }
+    .btn-pro { display: flex; align-items: center; gap: 7px;
+      background: linear-gradient(135deg,#f5c518,#e6a800); color: #0d0d0f;
+      border: none; border-radius: 20px; padding: 7px 16px; font-size: .78rem;
+      font-weight: 700; font-family: 'Inter',sans-serif; cursor: pointer;
+      transition: opacity .2s, box-shadow .2s; white-space: nowrap; }
+    .btn-pro:hover { opacity: .9; box-shadow: 0 0 16px rgba(245,197,24,.35); }
+    .btn-pro svg { width: 13px; height: 13px; fill: currentColor; }
+    .pro-active-badge { display: none; align-items: center; gap: 6px;
+      background: rgba(245,197,24,.12); border: 1px solid rgba(245,197,24,.35);
+      border-radius: 20px; padding: 6px 14px; font-size: .75rem; font-weight: 700; color: var(--gold); }
+    .pro-active-badge svg { width: 12px; height: 12px; fill: var(--gold); }
+
+    /* ── HERO BANNER ── */
+    .hero-banner { position: relative; height: 220px; overflow: hidden; }
+    .hero-bg { position: absolute; inset: 0; opacity: .55; }
+    .hero-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 40%, var(--bg) 100%); }
+
+    .hero-content { max-width: 1200px; margin: 0 auto; padding: 0 24px;
+      position: relative; z-index: 2; display: flex; align-items: flex-end;
+      height: 100%; padding-bottom: 0; }
+
+    .artist-avatar { width: 110px; height: 110px; border-radius: 50%; border: 3px solid var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.8rem; font-weight: 800; color: #fff;
+      flex-shrink: 0; margin-bottom: -30px; box-shadow: 0 8px 32px rgba(0,0,0,.5); }
+
+    /* ── PROFILE INFO ── */
+    .profile-wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    .profile-top { display: flex; align-items: flex-end; gap: 24px; padding-top: 0; margin-bottom: 24px; }
+    .profile-name-block { flex: 1; padding-top: 40px; }
+    .verified-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .artist-title { font-size: 2rem; font-weight: 800; letter-spacing: -.5px; }
+    .verified-badge { background: var(--orange); border-radius: 50%; width: 22px; height: 22px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .verified-badge svg { width: 12px; height: 12px; fill: #fff; }
+    .joined-label { font-size: .75rem; color: var(--text-muted); }
+    .profile-actions { display: flex; align-items: center; gap: 10px; padding-top: 40px; flex-shrink: 0; }
+
+    .btn-follow { display: flex; align-items: center; gap: 7px; background: var(--orange);
+      color: #fff; border: none; border-radius: 20px; padding: 10px 24px;
+      font-size: .875rem; font-weight: 700; font-family: 'Inter',sans-serif; cursor: pointer;
+      transition: background .2s, box-shadow .2s; }
+    .btn-follow:hover { background: var(--orange-dark); box-shadow: 0 0 16px var(--orange-glow); }
+    .btn-follow.following { background: none; border: 1px solid var(--border); color: var(--text-muted); }
+    .btn-follow.following:hover { border-color: #ff4040; color: #ff4040; }
+    .btn-share-profile { display: flex; align-items: center; gap: 6px; background: none;
+      border: 1px solid var(--border); border-radius: 20px; padding: 9px 18px;
+      font-size: .825rem; font-weight: 600; font-family: 'Inter',sans-serif; color: var(--text-muted);
+      cursor: pointer; transition: border-color .2s, color .2s; }
+    .btn-share-profile:hover { border-color: var(--orange); color: var(--orange); }
+    .btn-share-profile svg { width: 14px; height: 14px; fill: currentColor; }
+
+    /* ── STATS BAR ── */
+    .stats-bar { display: flex; gap: 32px; margin-bottom: 28px; flex-wrap: wrap; }
+    .stat-item { text-align: center; }
+    .stat-val { font-size: 1.5rem; font-weight: 800; color: var(--orange); }
+    .stat-lbl { font-size: .7rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; }
+
+    /* ── BIO ── */
+    .bio-wrap { margin-bottom: 36px; }
+    .bio-label { font-size: .75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;
+      letter-spacing: .06em; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+    .bio-edit-btn { background: none; border: none; cursor: pointer; color: var(--text-muted);
+      padding: 2px; line-height: 0; transition: color .2s; }
+    .bio-edit-btn:hover { color: var(--orange); }
+    .bio-edit-btn svg { width: 14px; height: 14px; fill: currentColor; }
+    .bio-text { font-size: .9rem; line-height: 1.65; color: var(--text); min-height: 24px;
+      max-width: 680px; }
+    .bio-text.empty { color: var(--text-muted); font-style: italic; }
+    .bio-editor { display: none; flex-direction: column; gap: 8px; max-width: 680px; }
+    .bio-editor textarea { background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px; font-size: .875rem; font-family: 'Inter',sans-serif;
+      color: var(--text); outline: none; resize: vertical; min-height: 80px;
+      transition: border-color .2s; }
+    .bio-editor textarea:focus { border-color: var(--orange); }
+    .bio-editor-actions { display: flex; gap: 8px; }
+    .btn-save-bio { background: var(--orange); color: #fff; border: none; border-radius: 8px;
+      padding: 8px 18px; font-size: .8rem; font-weight: 600; font-family: 'Inter',sans-serif;
+      cursor: pointer; transition: background .2s; }
+    .btn-save-bio:hover { background: var(--orange-dark); }
+    .btn-cancel-bio { background: none; border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px 14px; font-size: .8rem; font-weight: 600; font-family: 'Inter',sans-serif;
+      color: var(--text-muted); cursor: pointer; }
+
+    /* ── SECTION TITLE ── */
+    .section-title { font-size: 1.1rem; font-weight: 800; letter-spacing: -.3px;
+      margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+    .section-title .badge { font-size: .7rem; font-weight: 700; background: var(--orange);
+      color: #fff; border-radius: 6px; padding: 2px 8px; }
+
+    /* ── SONG CARDS (same as index) ── */
+    .song-list { display: flex; flex-direction: column; gap: 10px; }
+    .song-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 14px 18px; display: grid; grid-template-columns: auto 1fr auto;
+      align-items: center; gap: 16px; transition: background .2s, border-color .2s, transform .15s; }
+    .song-card:hover { background: var(--surface-hover); border-color: rgba(255,107,26,.4); transform: translateY(-1px); }
+    .song-card.playing { border-color: var(--orange); background: var(--surface-hover); }
+    .song-art { width: 52px; height: 52px; border-radius: 10px; display: flex; align-items: center;
+      justify-content: center; font-size: 1.25rem; font-weight: 800; color: #fff; flex-shrink: 0; }
+    .song-body { min-width: 0; }
+    .song-name { font-size: .9rem; font-weight: 700; white-space: nowrap; overflow: hidden;
+      text-overflow: ellipsis; margin-bottom: 5px; }
+    .song-meta-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .genre-badge { font-size: .65rem; font-weight: 700; border-radius: 6px; padding: 2px 7px;
+      text-transform: uppercase; letter-spacing: .04em; }
+    .meta-item { font-size: .72rem; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+    .meta-item svg { width: 11px; height: 11px; fill: currentColor; }
+    .song-actions { display: flex; align-items: center; gap: 4px; }
+    .icon-btn { background: none; border: none; cursor: pointer; color: var(--text-muted);
+      padding: 6px; border-radius: 8px; line-height: 0; transition: color .2s, background .2s; }
+    .icon-btn:hover { color: var(--text); background: var(--surface-hover); }
+    .icon-btn svg { width: 17px; height: 17px; fill: currentColor; }
+    .icon-btn.liked { color: #ff4081; }
+    .icon-btn.pro-locked { opacity: .55; }
+    .icon-btn.danger:hover { color: #ff4040; background: rgba(255,64,64,.1); }
+    .icon-btn.orange:hover { color: var(--orange); }
+
+    .empty-tracks { text-align: center; padding: 60px 24px; color: var(--text-muted); }
+    .empty-tracks svg { width: 40px; height: 40px; fill: var(--text-muted); opacity: .3; margin-bottom: 12px; }
+    .empty-tracks p { font-size: .875rem; }
+
+    /* ── OTHER ARTISTS ── */
+    .artists-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap: 14px; margin-bottom: 40px; }
+    .artist-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 20px 16px; text-align: center; text-decoration: none; color: inherit;
+      transition: background .2s, border-color .2s, transform .15s; cursor: pointer; display: block; }
+    .artist-card:hover { background: var(--surface-hover); border-color: var(--orange); transform: translateY(-2px); }
+    .ac-avatar { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; font-size: 1.4rem; font-weight: 800; color: #fff;
+      margin: 0 auto 12px; }
+    .ac-name { font-size: .85rem; font-weight: 700; white-space: nowrap; overflow: hidden;
+      text-overflow: ellipsis; margin-bottom: 4px; }
+    .ac-meta { font-size: .7rem; color: var(--text-muted); }
+
+    /* ══ NOW PLAYING BAR ══ */
+    #now-playing-bar { position: fixed; bottom: 0; left: 0; right: 0; height: var(--player-h);
+      background: rgba(20,20,24,.97); backdrop-filter: blur(28px); border-top: 1px solid var(--border);
+      z-index: 300; display: none; align-items: center; padding: 0 20px; gap: 16px; }
+    #now-playing-bar.active { display: flex; }
+    audio#main-audio { display: none; }
+    .np-art { width: 52px; height: 52px; border-radius: 10px; display: flex; align-items: center;
+      justify-content: center; font-size: 1.2rem; font-weight: 800; color: #fff; flex-shrink: 0; }
+    .np-info { min-width: 0; flex: 0 0 180px; }
+    .np-label { font-size: .6rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em;
+      color: var(--orange); margin-bottom: 2px; }
+    .np-title { font-size: .85rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .np-genre { font-size: .68rem; color: var(--text-muted); }
+    .np-controls { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .np-btn { background: none; border: none; cursor: pointer; color: var(--text-muted);
+      padding: 6px; border-radius: 8px; line-height: 0; transition: color .2s, background .2s; }
+    .np-btn:hover { color: var(--text); }
+    .np-btn svg { width: 20px; height: 20px; fill: currentColor; }
+    .np-btn.active-mode { color: var(--orange); }
+    .np-btn.primary { background: var(--orange); color: #fff; width: 40px; height: 40px;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .np-btn.primary:hover { background: var(--orange-dark); }
+    .np-progress-wrap { flex: 1; display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .np-time { font-size: .7rem; font-weight: 600; color: var(--text-muted); flex-shrink: 0; white-space: nowrap; }
+    .np-progress { flex: 1; -webkit-appearance: none; appearance: none; height: 4px;
+      border-radius: 2px; background: var(--border); outline: none; cursor: pointer; }
+    .np-progress::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px;
+      border-radius: 50%; background: var(--orange); cursor: pointer; box-shadow: 0 0 6px var(--orange-glow); }
+    .np-vol-wrap { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .np-vol-wrap svg { width: 16px; height: 16px; fill: var(--text-muted); }
+    .np-vol { -webkit-appearance: none; appearance: none; width: 80px; height: 4px;
+      border-radius: 2px; background: var(--border); outline: none; cursor: pointer; }
+    .np-vol::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px;
+      border-radius: 50%; background: var(--text-muted); cursor: pointer; }
+
+    /* ══ MODALS ══ */
+    .modal-overlay { position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,.72);
+      display: none; align-items: center; justify-content: center; padding: 24px; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+      padding: 32px 28px; max-width: 440px; width: 100%; position: relative; }
+    .modal-close { position: absolute; top: 14px; right: 14px; background: none; border: none;
+      cursor: pointer; color: var(--text-muted); padding: 4px; border-radius: 6px; line-height: 0; }
+    .modal-close:hover { color: var(--text); }
+    .modal-close svg { width: 18px; height: 18px; fill: currentColor; }
+    .pro-modal-icon { width: 56px; height: 56px; background: linear-gradient(135deg,#f5c518,#e6a800);
+      border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 18px; }
+    .pro-modal-icon svg { width: 28px; height: 28px; fill: #0d0d0f; }
+    .pro-modal h2 { font-size: 1.3rem; font-weight: 800; margin-bottom: 6px; }
+    .price-tag { font-size: 1.8rem; font-weight: 800; color: var(--gold); margin-bottom: 2px; }
+    .price-note { font-size: .78rem; color: var(--text-muted); margin-bottom: 22px; }
+    .pro-features { list-style: none; margin-bottom: 24px; display: flex; flex-direction: column; gap: 9px; }
+    .pro-features li { display: flex; align-items: center; gap: 9px; font-size: .85rem; }
+    .feat-check { width: 20px; height: 20px; border-radius: 50%; background: rgba(255,107,26,.15);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .feat-check svg { width: 11px; height: 11px; fill: var(--orange); }
+    .btn-get-pro { display: block; width: 100%; background: linear-gradient(135deg,#f5c518,#e6a800);
+      color: #0d0d0f; border: none; border-radius: 12px; padding: 13px; font-size: .9rem;
+      font-weight: 700; font-family: 'Inter',sans-serif; cursor: pointer; text-align: center;
+      text-decoration: none; margin-bottom: 14px; }
+    .btn-get-pro:hover { opacity: .9; }
+    .modal-divider { display: flex; align-items: center; gap: 10px; font-size: .72rem;
+      color: var(--text-muted); margin-bottom: 14px; }
+    .modal-divider::before, .modal-divider::after { content:''; flex:1; height:1px; background:var(--border); }
+    .code-row { display: flex; gap: 8px; }
+    .code-input { flex: 1; background: var(--surface-hover); border: 1px solid var(--border);
+      border-radius: 10px; padding: 10px 14px; font-size: .825rem; font-family: 'Inter',sans-serif;
+      color: var(--text); outline: none; text-transform: uppercase; letter-spacing: .05em; }
+    .code-input:focus { border-color: var(--orange); }
+    .btn-activate { background: var(--orange); color: #fff; border: none; border-radius: 10px;
+      padding: 10px 16px; font-size: .825rem; font-weight: 600; font-family: 'Inter',sans-serif; cursor: pointer; }
+    .code-error { font-size: .75rem; color: #ff4040; margin-top: 6px; display: none; }
+    .comment-modal h2 { font-size: 1.1rem; font-weight: 800; margin-bottom: 4px; }
+    .comment-track-name { font-size: .8rem; color: var(--orange); margin-bottom: 18px; font-weight: 600; }
+    #comment-list { max-height: 260px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+    .comment-item { background: var(--surface-hover); border-radius: 10px; padding: 10px 14px; }
+    .comment-author { font-size: .72rem; font-weight: 700; color: var(--orange); margin-bottom: 3px; }
+    .comment-ts { font-size: .65rem; color: var(--text-muted); float: right; }
+    .comment-text { font-size: .82rem; line-height: 1.5; }
+    .comment-form { display: flex; flex-direction: column; gap: 8px; }
+    .comment-form input, .comment-form textarea { background: var(--surface-hover); border: 1px solid var(--border);
+      border-radius: 10px; padding: 10px 14px; font-size: .825rem; font-family: 'Inter',sans-serif;
+      color: var(--text); outline: none; resize: none; }
+    .comment-form input:focus, .comment-form textarea:focus { border-color: var(--orange); }
+    .btn-comment { background: var(--orange); color: #fff; border: none; border-radius: 10px;
+      padding: 10px; font-size: .825rem; font-weight: 600; font-family: 'Inter',sans-serif; cursor: pointer; }
+    .no-comments { text-align: center; color: var(--text-muted); font-size: .82rem; padding: 24px 0; }
+    .queue-modal h2 { font-size: 1.1rem; font-weight: 800; margin-bottom: 18px; }
+    #queue-list { display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; }
+    .queue-item { display: flex; align-items: center; gap: 12px; background: var(--surface-hover);
+      border-radius: 10px; padding: 10px 14px; }
+    .queue-item.active { border: 1px solid var(--orange); }
+    .queue-pos { font-size: .72rem; font-weight: 600; color: var(--text-muted); width: 18px; text-align: center; flex-shrink: 0; }
+    .queue-art { width: 32px; height: 32px; border-radius: 7px; display: flex; align-items: center;
+      justify-content: center; font-size: .7rem; font-weight: 800; color: #fff; flex-shrink: 0; }
+    .queue-name { flex: 1; font-size: .85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .btn-remove-q { background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 3px; line-height: 0; }
+    .btn-remove-q:hover { color: #ff4040; }
+    .btn-remove-q svg { width: 14px; height: 14px; fill: currentColor; }
+    .queue-empty { text-align: center; color: var(--text-muted); font-size: .82rem; padding: 28px 0; }
+    .btn-clear-queue { margin-top: 14px; width: 100%; background: none; border: 1px solid var(--border);
+      border-radius: 10px; padding: 9px; font-size: .8rem; font-weight: 600;
+      font-family: 'Inter',sans-serif; color: var(--text-muted); cursor: pointer; }
+    .btn-clear-queue:hover { border-color: #ff4040; color: #ff4040; }
+
+    #toast { position: fixed; bottom: calc(var(--player-h) + 16px); left: 50%;
+      transform: translateX(-50%) translateY(10px); background: #2a2a32; border: 1px solid var(--border);
+      border-radius: 10px; padding: 10px 18px; font-size: .82rem; font-weight: 600; color: var(--text);
+      opacity: 0; transition: opacity .25s, transform .25s; z-index: 600; white-space: nowrap; pointer-events: none; }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--orange); }
+
+    @media (max-width: 600px) {
+      .artist-title { font-size: 1.4rem; }
+      .profile-actions { flex-direction: column; gap: 8px; padding-top: 16px; }
+      .hero-banner { height: 160px; }
+      .artist-avatar { width: 80px; height: 80px; font-size: 2rem; }
+      .np-info { flex: 0 0 120px; } .np-vol-wrap { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════ HEADER ══════════ -->
+<header>
+  <div class="header-inner">
+    <a href="/" class="logo">
+      <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>
+      <span class="logo-text">{{ app_name[:5] }}<span>{{ app_name[5:] }}</span></span>
+    </a>
+    <a href="/" class="btn-back">
+      <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+      Back
+    </a>
+    <div class="header-spacer"></div>
+    <div class="pro-active-badge" id="pro-active-badge">
+      <svg viewBox="0 0 24 24"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+      Pro
+    </div>
+    <button class="btn-pro" id="btn-go-pro" onclick="openProModal()">
+      <svg viewBox="0 0 24 24"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+      Go Pro
+    </button>
+  </div>
+</header>
+
+<!-- ══════════ HERO BANNER ══════════ -->
+<div class="hero-banner">
+  <div class="hero-bg" id="hero-bg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <div class="artist-avatar" id="hero-avatar">{{ artist_name[0].upper() }}</div>
+  </div>
+</div>
+
+<!-- ══════════ PROFILE ══════════ -->
+<div class="profile-wrap">
+
+  <div class="profile-top">
+    <div class="profile-name-block">
+      <div class="verified-row">
+        <span class="artist-title">{{ artist_name }}</span>
+        <div class="verified-badge" title="Verified Artist">
+          <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        </div>
+      </div>
+      <div class="joined-label">Member since {{ artist.joined }}</div>
+    </div>
+    <div class="profile-actions">
+      <button class="btn-follow" id="follow-btn" onclick="toggleFollow()">
+        Follow
+      </button>
+      <button class="btn-share-profile" onclick="shareProfile()">
+        <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
+        Share Profile
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="stat-val">{{ songs|length }}</div>
+      <div class="stat-lbl">Tracks</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-val">{{ total_plays }}</div>
+      <div class="stat-lbl">Total Plays</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-val" id="follower-count">{{ artist.followers }}</div>
+      <div class="stat-lbl">Followers</div>
+    </div>
+  </div>
+
+  <!-- Bio -->
+  <div class="bio-wrap">
+    <div class="bio-label">
+      About
+      <button class="bio-edit-btn" onclick="openBioEditor()" title="Edit bio">
+        <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+      </button>
+    </div>
+    <div class="bio-text {% if not artist.bio %}empty{% endif %}" id="bio-display">
+      {% if artist.bio %}{{ artist.bio }}{% else %}No bio yet — click the pencil to add one.{% endif %}
+    </div>
+    <div class="bio-editor" id="bio-editor">
+      <textarea id="bio-textarea" placeholder="Write a bio…" maxlength="300">{{ artist.bio }}</textarea>
+      <div class="bio-editor-actions">
+        <button class="btn-save-bio" onclick="saveBio()">Save</button>
+        <button class="btn-cancel-bio" onclick="closeBioEditor()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Track list -->
+  <div class="section-title">
+    🎵 Tracks <span class="badge">{{ songs|length }}</span>
+  </div>
+
+  {% if songs %}
+  <div class="song-list" style="margin-bottom:48px">
+    {% for song in songs %}
+    <div class="song-card"
+         data-filename="{{ song.filename }}"
+         data-name="{{ song.name }}"
+         data-genre="{{ song.genre }}"
+         data-artist="{{ song.artist }}">
+      <div class="song-art" data-art="{{ song.name }}">{{ song.name[0].upper() }}</div>
+      <div class="song-body">
+        <div class="song-name" title="{{ song.name }}">{{ song.name }}</div>
+        <div class="song-meta-row">
+          <span class="genre-badge" data-genre-badge="{{ song.genre }}">{{ song.genre }}</span>
+          <span class="meta-item">
+            <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+            <span class="play-count-el" data-fn="{{ song.filename }}">{{ song.play_count }}</span>
+          </span>
+          <span class="meta-item">
+            <svg viewBox="0 0 24 24"><path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18z"/></svg>
+            <span class="comment-count-el" data-fn="{{ song.filename }}">{{ song.comment_count }}</span>
+          </span>
+          <span class="meta-item">{{ song.upload_date }}</span>
+        </div>
+      </div>
+      <div class="song-actions">
+        <button class="icon-btn" title="Like" onclick="toggleLike(this,'{{ song.filename }}')">
+          <svg viewBox="0 0 24 24"><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"/></svg>
+        </button>
+        <button class="icon-btn orange" title="Play" onclick="playTrackDirect('{{ song.filename }}','{{ song.name }}','{{ song.genre }}')">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <button class="icon-btn pro-locked" title="Add to queue" onclick="handleAddToQueue(this)">
+          <svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>
+        </button>
+        <button class="icon-btn" title="Comment" onclick="openComments('{{ song.filename }}','{{ song.name }}')">
+          <svg viewBox="0 0 24 24"><path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18z"/></svg>
+        </button>
+        <a class="icon-btn" href="/download/{{ song.filename }}" title="Download" download>
+          <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+        </a>
+        <button class="icon-btn" title="Share" onclick="shareTrack('{{ song.filename }}','{{ song.name }}')">
+          <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
+        </button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-tracks" style="margin-bottom:48px">
+    <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+    <p>No tracks uploaded yet.</p>
+  </div>
+  {% endif %}
+
+  <!-- Other Artists -->
+  {% if others %}
+  <div class="section-title">👥 Discover More Artists</div>
+  <div class="artists-grid">
+    {% for a in others %}
+    <a class="artist-card" href="/artist/{{ a.name | urlencode }}">
+      <div class="ac-avatar" data-art="{{ a.name }}">{{ a.name[0].upper() }}</div>
+      <div class="ac-name" title="{{ a.name }}">{{ a.name }}</div>
+      <div class="ac-meta">{{ a.tracks }} track{{ 's' if a.tracks != 1 else '' }} · {{ a.play_count }} plays</div>
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+</div><!-- /profile-wrap -->
+
+<!-- ══════════ AUDIO + NOW PLAYING ══════════ -->
+<audio id="main-audio"></audio>
+<div id="now-playing-bar">
+  <div class="np-art" id="np-art">♪</div>
+  <div class="np-info">
+    <div class="np-label">Now Playing</div>
+    <div class="np-title" id="np-title">—</div>
+    <div class="np-genre" id="np-genre"></div>
+  </div>
+  <div class="np-controls">
+    <button class="np-btn" id="btn-shuffle" onclick="toggleShuffle()" title="Shuffle">
+      <svg viewBox="0 0 24 24"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>
+    </button>
+    <button class="np-btn" onclick="playPrev()" title="Previous">
+      <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+    </button>
+    <button class="np-btn primary" id="np-play-pause" onclick="togglePlayPause()" title="Play/Pause">
+      <svg id="icon-pause" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+      <svg id="icon-play" viewBox="0 0 24 24" style="display:none"><path d="M8 5v14l11-7z"/></svg>
+    </button>
+    <button class="np-btn" onclick="playNext()" title="Next">
+      <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+    </button>
+    <button class="np-btn" id="btn-repeat" onclick="toggleRepeat()" title="Repeat">
+      <svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4zm-4-2V9h-1l-2 1v1h1.5v4H13z"/></svg>
+    </button>
+  </div>
+  <div class="np-progress-wrap">
+    <span class="np-time" id="np-current">0:00</span>
+    <input type="range" class="np-progress" id="np-progress" value="0" min="0" max="100" step="0.1" />
+    <span class="np-time" id="np-duration">0:00</span>
+  </div>
+  <div class="np-vol-wrap">
+    <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+    <input type="range" class="np-vol" id="np-vol" value="100" min="0" max="100" />
+  </div>
+  <button class="np-btn" onclick="openQueueModal()" title="Queue">
+    <svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>
+  </button>
+</div>
+
+<div id="toast"></div>
+
+<!-- ══════════ PRO MODAL ══════════ -->
+<div class="modal-overlay" id="pro-modal-overlay" onclick="closeModal('pro-modal-overlay')">
+  <div class="modal pro-modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal('pro-modal-overlay')"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+    <div class="pro-modal-icon"><svg viewBox="0 0 24 24"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg></div>
+    <h2>Upgrade to Pro</h2>
+    <div class="price-tag">{{ pro_price }}</div>
+    <div class="price-note">Billed monthly · Cancel anytime</div>
+    <ul class="pro-features">
+      <li><div class="feat-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>Queue &amp; auto-play</li>
+      <li><div class="feat-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>Shuffle &amp; repeat</li>
+      <li><div class="feat-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>Priority support</li>
+    </ul>
+    <a href="{{ payment_url }}" target="_blank" class="btn-get-pro">Get Pro Access →</a>
+    <div class="modal-divider">Have a code?</div>
+    <div class="code-row">
+      <input type="text" id="code-input" class="code-input" placeholder="Access code" maxlength="40" />
+      <button class="btn-activate" onclick="activatePro()">Activate</button>
+    </div>
+    <div class="code-error" id="code-error">Invalid code.</div>
+  </div>
+</div>
+
+<!-- ══════════ COMMENTS MODAL ══════════ -->
+<div class="modal-overlay" id="comment-modal-overlay" onclick="closeModal('comment-modal-overlay')">
+  <div class="modal comment-modal" onclick="event.stopPropagation()" style="max-width:500px">
+    <button class="modal-close" onclick="closeModal('comment-modal-overlay')"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+    <h2>Comments</h2>
+    <div class="comment-track-name" id="comment-track-name"></div>
+    <div id="comment-list"><div class="no-comments">Loading…</div></div>
+    <div class="comment-form">
+      <input type="text" id="comment-name" placeholder="Your name (optional)" maxlength="40" />
+      <textarea id="comment-text" rows="2" placeholder="Write a comment…" maxlength="300"></textarea>
+      <button class="btn-comment" onclick="submitComment()">Post Comment</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ QUEUE MODAL ══════════ -->
+<div class="modal-overlay" id="queue-modal-overlay" onclick="closeModal('queue-modal-overlay')">
+  <div class="modal queue-modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal('queue-modal-overlay')"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+    <h2>Queue</h2>
+    <div id="queue-list"></div>
+    <button class="btn-clear-queue" onclick="clearQueue()">Clear Queue</button>
+  </div>
+</div>
+
+<script>
+// ══ COLORS ══
+const ART_PALETTE = ['#ff6b1a','#9c27b0','#e91e63','#00bcd4','#4caf50','#f5c518','#ff5722','#3f51b5','#009688','#ff9800'];
+const GENRE_COLORS = {'Hip-Hop':['#ff6b1a'],'R&B':['#9c27b0'],'Pop':['#e91e63'],'Electronic':['#00bcd4'],'Afrobeats':['#4caf50'],'Gospel':['#f5c518'],'Drill':['#ff5722'],'Dancehall':['#00e5ff'],'Latin':['#ff9800'],'Other':['#607d8b']};
+function artColor(n){let h=0;for(let i=0;i<n.length;i++)h=n.charCodeAt(i)+((h<<5)-h);return ART_PALETTE[Math.abs(h)%ART_PALETTE.length];}
+
+// Apply art colors
+(function(){
+  const c = artColor('{{ artist_name }}');
+  document.getElementById('hero-bg').style.background = `linear-gradient(135deg, ${c} 0%, ${c}44 100%)`;
+  document.getElementById('hero-avatar').style.background = `linear-gradient(135deg, ${c}, ${c}88)`;
+  document.querySelectorAll('[data-art]').forEach(el => { el.style.background=`linear-gradient(135deg,${artColor(el.dataset.art)},${artColor(el.dataset.art)}88)`; });
+  document.querySelectorAll('[data-genre-badge]').forEach(el => { const g=GENRE_COLORS[el.dataset.genreBadge]||['#607d8b']; el.style.background=g[0]+'25'; el.style.color=g[0]; });
+})();
+
+// ══ PRO ══
+let isPro = localStorage.getItem('sw_pro')==='1';
+function applyProState(){
+  document.querySelectorAll('.icon-btn.pro-locked').forEach(b=>{if(isPro)b.classList.remove('pro-locked');else b.classList.add('pro-locked');});
+  document.getElementById('btn-go-pro').style.display=isPro?'none':'';
+  document.getElementById('pro-active-badge').style.display=isPro?'flex':'none';
+}
+applyProState();
+function openProModal(){document.getElementById('pro-modal-overlay').classList.add('open');}
+async function activatePro(){
+  const code=document.getElementById('code-input').value.trim();
+  const err=document.getElementById('code-error'); err.style.display='none';
+  if(!code)return;
+  try{const r=await fetch('/api/verify-code',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code})});
+    if(r.ok){isPro=true;localStorage.setItem('sw_pro','1');applyProState();closeModal('pro-modal-overlay');showToast('🌟 Pro activated!');}
+    else err.style.display='block';
+  }catch{err.style.display='block';}
+}
+
+// ══ FOLLOW ══
+const ARTIST_NAME = {{ artist_name | tojson }};
+let isFollowing = localStorage.getItem('sw_follow_'+ARTIST_NAME)==='1';
+function initFollow(){
+  const btn=document.getElementById('follow-btn');
+  if(isFollowing){btn.textContent='Following';btn.classList.add('following');}
+  else{btn.textContent='Follow';btn.classList.remove('following');}
+}
+initFollow();
+async function toggleFollow(){
+  const action = isFollowing?'unfollow':'follow';
+  try{
+    const r=await fetch('/api/artist/'+encodeURIComponent(ARTIST_NAME)+'/follow',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action})});
+    const d=await r.json();
+    isFollowing=!isFollowing;
+    if(isFollowing)localStorage.setItem('sw_follow_'+ARTIST_NAME,'1');
+    else localStorage.removeItem('sw_follow_'+ARTIST_NAME);
+    document.getElementById('follower-count').textContent=d.followers;
+    initFollow();
+    showToast(isFollowing?'Following '+ARTIST_NAME:'Unfollowed '+ARTIST_NAME);
+  }catch{showToast('Could not update follow status.');}
+}
+
+// ══ BIO ══
+function openBioEditor(){
+  document.getElementById('bio-display').style.display='none';
+  document.getElementById('bio-editor').style.display='flex';
+  document.getElementById('bio-textarea').focus();
+}
+function closeBioEditor(){
+  document.getElementById('bio-display').style.display='';
+  document.getElementById('bio-editor').style.display='none';
+}
+async function saveBio(){
+  const bio=document.getElementById('bio-textarea').value.trim();
+  try{
+    await fetch('/api/artist/'+encodeURIComponent(ARTIST_NAME)+'/bio',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({bio})});
+    const d=document.getElementById('bio-display');
+    d.textContent=bio||'No bio yet — click the pencil to add one.';
+    d.classList.toggle('empty',!bio);
+    closeBioEditor(); showToast('Bio saved!');
+  }catch{showToast('Could not save bio.');}
+}
+
+// ══ SHARE PROFILE ══
+function shareProfile(){
+  const url=window.location.href;
+  if(navigator.clipboard)navigator.clipboard.writeText(url).then(()=>showToast('🔗 Profile link copied!'));
+  else showToast('🔗 '+url);
+}
+
+// ══ AUDIO ENGINE ══
+const audio=document.getElementById('main-audio');
+let queue=[],currentIdx=-1,shuffleOn=false,repeatMode=0;
+audio.volume=1;
+audio.addEventListener('ended',()=>{
+  if(repeatMode===2){audio.currentTime=0;audio.play();return;}
+  if(shuffleOn&&queue.length>1){let n;do{n=Math.floor(Math.random()*queue.length);}while(n===currentIdx);currentIdx=n;playCurrentTrack();}
+  else if(currentIdx<queue.length-1){currentIdx++;playCurrentTrack();}
+  else if(repeatMode===1&&queue.length>0){currentIdx=0;playCurrentTrack();}
+});
+audio.addEventListener('play',()=>{document.getElementById('icon-pause').style.display='';document.getElementById('icon-play').style.display='none';});
+audio.addEventListener('pause',()=>{document.getElementById('icon-pause').style.display='none';document.getElementById('icon-play').style.display='';});
+audio.addEventListener('timeupdate',()=>{if(!audio.duration)return;const p=(audio.currentTime/audio.duration)*100;const pr=document.getElementById('np-progress');pr.value=p;pr.style.background=`linear-gradient(to right,var(--orange) ${p}%,var(--border) ${p}%)`;document.getElementById('np-current').textContent=fmt(audio.currentTime);});
+audio.addEventListener('loadedmetadata',()=>{document.getElementById('np-duration').textContent=fmt(audio.duration);});
+document.getElementById('np-progress').addEventListener('input',function(){if(audio.duration)audio.currentTime=(this.value/100)*audio.duration;});
+document.getElementById('np-vol').addEventListener('input',function(){audio.volume=this.value/100;this.style.background=`linear-gradient(to right,var(--text-muted) ${this.value}%,var(--border) ${this.value}%)`;});
+function fmt(s){if(isNaN(s))return'0:00';const m=Math.floor(s/60),ss=Math.floor(s%60);return`${m}:${ss.toString().padStart(2,'0')}`;}
+function playTrackDirect(fn,name,genre){const ex=queue.findIndex(t=>t.filename===fn);if(ex>=0)currentIdx=ex;else{queue.push({filename:fn,name,genre});currentIdx=queue.length-1;}playCurrentTrack();}
+function playCurrentTrack(){if(currentIdx<0||currentIdx>=queue.length)return;const t=queue[currentIdx];audio.src='/music/'+t.filename;audio.play();document.getElementById('np-title').textContent=t.name;document.getElementById('np-genre').textContent=t.genre||'';document.getElementById('now-playing-bar').classList.add('active');const a=document.getElementById('np-art');a.textContent=t.name[0].toUpperCase();a.style.background=`linear-gradient(135deg,${artColor(t.name)},${artColor(t.name)}88)`;updateQueueUI();highlightCard(t.filename);recordPlay(t.filename);}
+function togglePlayPause(){audio.paused?audio.play():audio.pause();}
+function playNext(){if(shuffleOn&&queue.length>1){let n;do{n=Math.floor(Math.random()*queue.length);}while(n===currentIdx);currentIdx=n;}else if(currentIdx<queue.length-1)currentIdx++;else if(repeatMode===1)currentIdx=0;else return;playCurrentTrack();}
+function playPrev(){if(audio.currentTime>3){audio.currentTime=0;return;}if(currentIdx>0){currentIdx--;playCurrentTrack();}else audio.currentTime=0;}
+function toggleShuffle(){shuffleOn=!shuffleOn;document.getElementById('btn-shuffle').classList.toggle('active-mode',shuffleOn);showToast(shuffleOn?'🔀 Shuffle on':'Shuffle off');}
+function toggleRepeat(){repeatMode=(repeatMode+1)%3;const b=document.getElementById('btn-repeat');b.classList.toggle('active-mode',repeatMode>0);showToast(['Repeat off','🔁 Repeat all','🔂 Repeat one'][repeatMode]);}
+function handleAddToQueue(btn){if(!isPro){openProModal();return;}const c=btn.closest('.song-card');queue.push({filename:c.dataset.filename,name:c.dataset.name,genre:c.dataset.genre});updateQueueUI();if(currentIdx===-1){currentIdx=0;playCurrentTrack();}else showToast('Added to queue: '+c.dataset.name);}
+function clearQueue(){queue=[];currentIdx=-1;audio.pause();audio.src='';document.getElementById('now-playing-bar').classList.remove('active');document.querySelectorAll('.song-card.playing').forEach(c=>c.classList.remove('playing'));updateQueueUI();closeModal('queue-modal-overlay');}
+function removeFromQueue(i){queue.splice(i,1);if(i<currentIdx)currentIdx--;else if(i===currentIdx){if(!queue.length){clearQueue();return;}currentIdx=Math.min(currentIdx,queue.length-1);playCurrentTrack();}updateQueueUI();}
+function updateQueueUI(){const l=document.getElementById('queue-list');if(!l)return;if(!queue.length){l.innerHTML='<div class="queue-empty">Queue is empty</div>';return;}l.innerHTML=queue.map((t,i)=>`<div class="queue-item ${i===currentIdx?'active':''}"><span class="queue-pos">${i===currentIdx?'▶':i+1}</span><div class="queue-art" style="background:linear-gradient(135deg,${artColor(t.name)},${artColor(t.name)}88)">${esc(t.name[0])}</div><span class="queue-name">${esc(t.name)}</span><button class="btn-remove-q" onclick="removeFromQueue(${i})"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button></div>`).join('');}
+function openQueueModal(){updateQueueUI();document.getElementById('queue-modal-overlay').classList.add('open');}
+function highlightCard(fn){document.querySelectorAll('.song-card').forEach(c=>c.classList.toggle('playing',c.dataset.filename===fn));}
+async function recordPlay(fn){try{const r=await fetch('/api/play/'+fn,{method:'POST'});const d=await r.json();document.querySelectorAll(`.play-count-el[data-fn="${fn}"]`).forEach(e=>e.textContent=d.play_count);}catch{}}
+
+// ══ LIKES ══
+function getLikes(){try{return JSON.parse(localStorage.getItem('sw_likes')||'{}');}catch{return{};}}
+function saveLikes(l){localStorage.setItem('sw_likes',JSON.stringify(l));}
+(function(){const likes=getLikes();document.querySelectorAll('.song-card').forEach(c=>{const fn=c.dataset.filename;const b=c.querySelector('.icon-btn[title="Like"]');if(b&&likes[fn])b.classList.add('liked');});})();
+function toggleLike(btn,fn){const likes=getLikes();if(likes[fn]){delete likes[fn];btn.classList.remove('liked');showToast('Removed from likes');}else{likes[fn]=1;btn.classList.add('liked');showToast('❤️ Liked!');}saveLikes(likes);}
+
+// ══ COMMENTS ══
+let activeCommentFile=null;
+function openComments(fn,name){activeCommentFile=fn;document.getElementById('comment-track-name').textContent=name;document.getElementById('comment-list').innerHTML='<div class="no-comments">Loading…</div>';document.getElementById('comment-modal-overlay').classList.add('open');loadComments(fn);}
+async function loadComments(fn){try{const r=await fetch('/api/comments/'+fn);const d=await r.json();const l=document.getElementById('comment-list');if(!d.length){l.innerHTML='<div class="no-comments">No comments yet!</div>';return;}l.innerHTML=d.map(c=>`<div class="comment-item"><span class="comment-ts">${esc(c.ts)}</span><div class="comment-author">${esc(c.name)}</div><div class="comment-text">${esc(c.text)}</div></div>`).join('');}catch{document.getElementById('comment-list').innerHTML='<div class="no-comments">Failed to load.</div>';}}
+async function submitComment(){const name=document.getElementById('comment-name').value.trim()||'Anonymous';const text=document.getElementById('comment-text').value.trim();if(!text||!activeCommentFile)return;try{const r=await fetch('/api/comments/'+activeCommentFile,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,text})});if(r.ok){document.getElementById('comment-text').value='';loadComments(activeCommentFile);document.querySelectorAll(`.comment-count-el[data-fn="${activeCommentFile}"]`).forEach(e=>{const n=parseInt(e.textContent)||0;e.textContent=n+1;});showToast('💬 Comment posted!');}}catch{showToast('Failed to post.');}}
+
+// ══ SHARE ══
+function shareTrack(fn,name){const url=window.location.origin+'/music/'+encodeURIComponent(fn);if(navigator.clipboard)navigator.clipboard.writeText(url).then(()=>showToast('🔗 Link copied: '+name));else showToast('🔗 '+url);}
+
+// ══ MODAL / TOAST UTILS ══
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));});
+let toastTimer;
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2400);}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+</script>
+</body>
+</html>

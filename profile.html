@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ profile_user.username }} — {{ app_name }}</title>
+  <link rel="manifest" href="/static/manifest.json" />
+  <meta name="theme-color" content="#ff6b1a" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="{{ app_name }}" />
+  <link rel="apple-touch-icon" href="/icon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d0d0f; --surface: #17171b; --surface-hover: #1f1f25;
+      --border: #2a2a32; --orange: #ff6b1a; --orange-dark: #d95400;
+      --orange-glow: rgba(255,107,26,.18); --gold: #f5c518;
+      --text: #f0f0f4; --text-muted: #8a8a9a; --radius: 14px; --player-h: 90px;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text);
+      min-height: 100vh; padding-bottom: calc(var(--player-h) + 16px); }
+
+    /* ── HEADER ── */
+    header { position: sticky; top: 0; z-index: 200; background: rgba(13,13,15,.92);
+      backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); padding: 0 24px; }
+    .header-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center;
+      height: 64px; gap: 14px; }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; }
+    .logo-icon { width: 36px; height: 36px; background: var(--orange); border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; }
+    .logo-icon svg { width: 20px; height: 20px; fill: #fff; }
+    .logo-text { font-size: 1.2rem; font-weight: 800; letter-spacing: -.5px; color: var(--text); }
+    .logo-text span { color: var(--orange); }
+    .header-search { flex: 1; position: relative; max-width: 360px; margin: 0 auto; }
+    .header-search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      width: 15px; height: 15px; color: var(--text-muted); pointer-events: none; }
+    .header-search input { width: 100%; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; padding: 9px 14px 9px 36px; font-size: .825rem;
+      font-family: 'Inter', sans-serif; color: var(--text); outline: none;
+      transition: border-color .2s, box-shadow .2s; }
+    .header-search input::placeholder { color: var(--text-muted); }
+    .header-search input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px var(--orange-glow); }
+    .h-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .btn-pro { display: flex; align-items: center; gap: 7px;
+      background: linear-gradient(135deg,#f5c518,#e6a800); color: #0d0d0f;
+      border: none; border-radius: 20px; padding: 7px 16px; font-size: .78rem;
+      font-weight: 700; font-family: 'Inter',sans-serif; cursor: pointer;
+      transition: opacity .2s, box-shadow .2s; white-space: nowrap; }
+    .btn-pro:hover { opacity: .9; box-shadow: 0 0 16px rgba(245,197,24,.35); }
+    .btn-pro svg { width: 13px; height: 13px; fill: currentColor; }
+    .pro-active-badge { display: none; align-items: center; gap: 6px;
+      background: rgba(245,197,24,.12); border: 1px solid rgba(245,197,24,.35);
+      border-radius: 20px; padding: 6px 14px; font-size: .75rem; font-weight: 700; color: var(--gold); }
+    .pro-active-badge svg { width: 12px; height: 12px; fill: var(--gold); }
+
+    /* User menu */
+    .user-menu { position: relative; }
+    .user-trigger { display: flex; align-items: center; gap: 8px; background: none;
+      border: 1px solid var(--border); border-radius: 20px; padding: 5px 12px 5px 5px;
+      cursor: pointer; transition: border-color .2s; }
+    .user-trigger:hover { border-color: var(--orange); }
+    .user-avatar-sm { width: 28px; height: 28px; border-radius: 50%; overflow: hidden;
+      display: flex; align-items: center; justify-content: center; font-size: .7rem; font-weight: 800; color: #fff; flex-shrink: 0; }
+    .user-avatar-sm img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .user-trigger-name { font-size: .78rem; font-weight: 600; color: var(--text); }
+    .user-caret { width: 10px; height: 10px; fill: var(--text-muted); }
+    .user-dropdown { position: absolute; top: calc(100% + 8px); right: 0; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 12px; padding: 6px; min-width: 164px; z-index: 300;
+      display: none; box-shadow: 0 8px 32px rgba(0,0,0,.5); }
+    .user-menu.open .user-dropdown { display: block; }
+    .user-dropdown a, .user-dropdown button { display: flex; align-items: center; gap: 9px;
+      width: 100%; text-decoration: none; color: var(--text); background: none; border: none;
+      padding: 9px 12px; font-size: .82rem; font-weight: 500; font-family: 'Inter',sans-serif;
+      border-radius: 8px; cursor: pointer; text-align: left; transition: background .2s; }
+    .user-dropdown a:hover, .user-dropdown button:hover { background: var(--surface-hover); }
+    .user-dropdown svg { width: 14px; height: 14px; fill: currentColor; color: var(--text-muted); }
+    .user-dropdown .logout-btn { color: #ff5050; }
+    .user-dropdown .logout-btn svg { color: #ff5050; }
+    .btn-signin { display: flex; align-items: center; gap: 6px; background: var(--orange);
+      color: #fff; border: none; border-radius: 20px; padding: 7px 16px; font-size: .78rem;
+      font-weight: 700; font-family: 'Inter',sans-serif; cursor: pointer; text-decoration: none;
+      transition: background .2s; }
+    .btn-signin:hover { background: var(--orange-dark); }
+
+    /* ── MAIN ── */
+    main { max-width: 1200px; margin: 0 auto; padding: 0 24px 20px; }
+
+    /* ── PROFILE HERO ── */
+    .profile-banner {
+      height: 200px; border-radius: 0 0 var(--radius) var(--radius);
+      background: linear-gradient(135deg, {{ profile_user.username | art_color }}, #0d0d0f 80%);
+      position: relative; margin: 0 -24px; overflow: visible;
+    }
+    .profile-avatar-wrap {
+      position: absolute; bottom: -52px; left: 32px;
+    }
+    .profile-avatar-lg {
+      width: 104px; height: 104px; border-radius: 50%;
+      border: 4px solid var(--bg); background: {{ profile_user.username | art_color }};
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.6rem; font-weight: 800; color: #fff; overflow: hidden;
+      box-shadow: 0 4px 24px rgba(0,0,0,.6);
+    }
+    .profile-avatar-lg img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .profile-meta-row { display: flex; align-items: flex-end; justify-content: space-between;
+      margin-top: 64px; padding-bottom: 24px; gap: 16px; flex-wrap: wrap; }
+    .profile-info h1 { font-size: 1.6rem; font-weight: 800; letter-spacing: -.5px; }
+    .profile-info .profile-joined { font-size: .75rem; color: var(--text-muted); margin-top: 2px; }
+    .profile-info .profile-bio { font-size: .875rem; color: var(--text-muted); margin-top: 6px;
+      max-width: 480px; line-height: 1.55; }
+    .profile-info .profile-bio.empty { font-style: italic; }
+    .profile-actions { display: flex; gap: 10px; flex-shrink: 0; }
+    .btn-follow { background: var(--orange); color: #fff; border: none; border-radius: 20px;
+      padding: 9px 22px; font-size: .85rem; font-weight: 700; font-family: 'Inter',sans-serif;
+      cursor: pointer; transition: background .2s; }
+    .btn-follow:hover { background: var(--orange-dark); }
+    .btn-follow.following { background: var(--surface-hover); color: var(--text-muted);
+      border: 1px solid var(--border); }
+    .btn-follow.following:hover { color: #ff5050; border-color: #ff5050; background: rgba(255,80,80,.08); }
+    .btn-edit { background: none; color: var(--text); border: 1px solid var(--border);
+      border-radius: 20px; padding: 9px 22px; font-size: .85rem; font-weight: 700;
+      font-family: 'Inter',sans-serif; cursor: pointer; transition: border-color .2s, color .2s; }
+    .btn-edit:hover { border-color: var(--orange); color: var(--orange); }
+
+    /* stats */
+    .profile-stats { display: flex; gap: 28px; margin-top: 20px; margin-bottom: 32px; flex-wrap: wrap; }
+    .pstat { display: flex; flex-direction: column; align-items: center; }
+    .pstat-val { font-size: 1.35rem; font-weight: 800; color: var(--text); line-height: 1; }
+    .pstat-label { font-size: .7rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; margin-top: 2px; }
+
+    /* ── TRACK CARDS ── */
+    .section-heading { font-size: 1.05rem; font-weight: 800; margin-bottom: 16px; }
+    .songs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+    .song-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 16px; display: flex; flex-direction: column; gap: 10px; cursor: pointer;
+      transition: border-color .2s, transform .15s, box-shadow .2s; }
+    .song-card:hover { border-color: var(--orange); transform: translateY(-2px); box-shadow: 0 4px 20px rgba(255,107,26,.1); }
+    .song-card.playing { border-color: var(--orange); box-shadow: 0 0 0 2px var(--orange-glow); }
+    .art-wrap { position: relative; width: 100%; }
+    .art { width: 100%; padding-top: 100%; border-radius: 10px; position: relative; overflow: hidden; }
+    .art-inner { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+    .art-inner span { font-size: 2.8rem; font-weight: 900; color: rgba(255,255,255,.85); letter-spacing: -.05em; }
+    .play-over { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,.45); opacity: 0; transition: opacity .2s; border-radius: 10px; }
+    .song-card:hover .play-over { opacity: 1; }
+    .play-over svg { width: 40px; height: 40px; fill: #fff; drop-shadow(0 2px 8px rgba(0,0,0,.5)); }
+    .genre-badge { position: absolute; top: 8px; right: 8px; background: rgba(13,13,15,.8);
+      color: var(--text-muted); font-size: .65rem; font-weight: 700; padding: 3px 8px;
+      border-radius: 20px; backdrop-filter: blur(4px); text-transform: uppercase; letter-spacing: .04em; }
+    .song-info { flex: 1; }
+    .song-name { font-size: .9rem; font-weight: 700; line-height: 1.3; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .song-meta { display: flex; align-items: center; justify-content: space-between; }
+    .song-plays { font-size: .72rem; color: var(--text-muted); }
+    .song-date { font-size: .7rem; color: var(--text-muted); }
+    .song-actions { display: flex; gap: 6px; }
+    .icon-btn { width: 30px; height: 30px; border-radius: 8px; border: none; background: var(--surface-hover);
+      color: var(--text-muted); display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: background .2s, color .2s; flex-shrink: 0; }
+    .icon-btn:hover { background: var(--orange-glow); color: var(--orange); }
+    .icon-btn svg { width: 14px; height: 14px; fill: currentColor; }
+    .icon-btn.liked { color: #ff4060; background: rgba(255,64,96,.1); }
+
+    .empty-songs { text-align: center; padding: 48px 24px; color: var(--text-muted); font-size: .9rem; }
+    .empty-songs svg { width: 40px; height: 40px; fill: var(--border); display: block; margin: 0 auto 12px; }
+
+    /* ── DISCOVER USERS ── */
+    .users-row { display: flex; gap: 14px; flex-wrap: wrap; }
+    .user-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 18px 20px; display: flex; align-items: center; gap: 12px; cursor: pointer;
+      text-decoration: none; color: var(--text); transition: border-color .2s, transform .15s; flex: 1; min-width: 180px; max-width: 240px; }
+    .user-card:hover { border-color: var(--orange); transform: translateY(-2px); }
+    .uc-av { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; font-size: 1rem; font-weight: 800; color: #fff; flex-shrink: 0; overflow: hidden; }
+    .uc-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .uc-name { font-size: .85rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .uc-meta { font-size: .72rem; color: var(--text-muted); margin-top: 2px; }
+
+    /* ── NOW PLAYING BAR ── */
+    .now-playing { position: fixed; bottom: 0; left: 0; right: 0; height: var(--player-h);
+      background: rgba(13,13,15,.97); backdrop-filter: blur(24px);
+      border-top: 1px solid var(--border); display: flex; align-items: center;
+      padding: 0 20px; gap: 16px; z-index: 100; }
+    .np-art { width: 54px; height: 54px; border-radius: 10px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: 900; color: #fff; }
+    .np-info { flex: 1; min-width: 0; }
+    .np-title { font-size: .88rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .np-artist { font-size: .72rem; color: var(--text-muted); margin-top: 1px; }
+    .np-controls { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .np-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: var(--surface);
+      color: var(--text); display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: background .2s, color .2s; flex-shrink: 0; }
+    .np-btn:hover { background: var(--surface-hover); color: var(--orange); }
+    .np-btn svg { width: 16px; height: 16px; fill: currentColor; }
+    .np-btn.active { color: var(--orange); }
+    .np-play { width: 44px; height: 44px; background: var(--orange); color: #fff; }
+    .np-play:hover { background: var(--orange-dark); color: #fff; }
+    .np-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .np-progress { display: flex; flex-direction: column; align-items: center; gap: 5px;
+      min-width: 180px; max-width: 320px; flex: 1; }
+    .np-time-row { display: flex; justify-content: space-between; width: 100%; }
+    .np-time { font-size: .65rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+    .progress-bar { width: 100%; height: 4px; background: var(--border); border-radius: 2px;
+      cursor: pointer; position: relative; }
+    .progress-fill { height: 100%; background: var(--orange); border-radius: 2px; width: 0%; transition: width .2s linear; }
+    .vol-row { display: flex; align-items: center; gap: 6px; }
+    .vol-row svg { width: 14px; height: 14px; fill: var(--text-muted); flex-shrink: 0; }
+    input[type=range] { -webkit-appearance: none; appearance: none; height: 4px; border-radius: 2px; background: var(--border); outline: none; cursor: pointer; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: var(--orange); cursor: pointer; }
+    #vol-slider { width: 72px; }
+
+    /* ── EDIT MODAL ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.7);
+      backdrop-filter: blur(6px); z-index: 400; display: none; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+      padding: 28px; width: 90%; max-width: 440px; position: relative; }
+    .modal-close { position: absolute; top: 14px; right: 14px; width: 28px; height: 28px;
+      border: none; background: none; color: var(--text-muted); cursor: pointer; display: flex;
+      align-items: center; justify-content: center; border-radius: 6px; }
+    .modal-close:hover { color: var(--text); }
+    .modal-close svg { width: 18px; height: 18px; fill: currentColor; }
+    .modal h2 { font-size: 1.1rem; font-weight: 800; margin-bottom: 20px; }
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: .72rem; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+    .field input, .field textarea { width: 100%; background: var(--surface-hover);
+      border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px;
+      font-size: .875rem; font-family: 'Inter',sans-serif; color: var(--text); outline: none;
+      transition: border-color .2s; resize: none; }
+    .field input:focus, .field textarea:focus { border-color: var(--orange); }
+    .avatar-preview { width: 80px; height: 80px; border-radius: 50%; background: {{ profile_user.username | art_color }};
+      display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 800;
+      color: #fff; margin: 0 auto 16px; overflow: hidden; cursor: pointer; border: 3px solid var(--border); }
+    .avatar-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .avatar-upload-hint { text-align: center; font-size: .75rem; color: var(--text-muted); margin-bottom: 20px; }
+    .btn-save { width: 100%; background: var(--orange); color: #fff; border: none; border-radius: 10px;
+      padding: 12px; font-size: .9rem; font-weight: 700; font-family: 'Inter',sans-serif; cursor: pointer;
+      transition: background .2s; }
+    .btn-save:hover { background: var(--orange-dark); }
+
+    /* comments modal */
+    .comment-modal h2 { font-size: 1.1rem; font-weight: 800; margin-bottom: 4px; }
+    .comment-track-name { font-size: .8rem; color: var(--orange); margin-bottom: 18px; font-weight: 600; }
+    #comment-list { max-height: 260px; overflow-y: auto; display: flex; flex-direction: column;
+      gap: 10px; margin-bottom: 18px; }
+    .comment-item { background: var(--surface-hover); border-radius: 10px; padding: 10px 14px; }
+    .comment-author { font-size: .72rem; font-weight: 700; color: var(--orange); margin-bottom: 3px; }
+    .comment-ts { font-size: .65rem; color: var(--text-muted); float: right; }
+    .comment-text { font-size: .82rem; line-height: 1.5; }
+    .comment-form { display: flex; flex-direction: column; gap: 8px; }
+    .comment-form input, .comment-form textarea {
+      background: var(--surface-hover); border: 1px solid var(--border); border-radius: 10px;
+      padding: 10px 14px; font-size: .825rem; font-family: 'Inter', sans-serif; color: var(--text);
+      outline: none; transition: border-color .2s; resize: none; }
+    .comment-form input:focus, .comment-form textarea:focus { border-color: var(--orange); }
+    .comment-form textarea { min-height: 70px; }
+    .btn-comment { background: var(--orange); color: #fff; border: none; border-radius: 8px;
+      padding: 9px 18px; font-size: .825rem; font-weight: 600; font-family: 'Inter',sans-serif;
+      cursor: pointer; align-self: flex-end; transition: background .2s; }
+    .btn-comment:hover { background: var(--orange-dark); }
+
+    /* toast */
+    .toast { position: fixed; bottom: calc(var(--player-h) + 16px); left: 50%; transform: translateX(-50%) translateY(12px);
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      padding: 10px 18px; font-size: .82rem; font-weight: 600; z-index: 500;
+      opacity: 0; transition: opacity .25s, transform .25s; white-space: nowrap; pointer-events: none; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── ACTIVITY FEED ── */
+    .activity-feed { display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; }
+    .activity-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px;
+      border-radius: 10px; transition: background .15s; }
+    .activity-item:hover { background: var(--surface-hover); }
+    .act-av { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; font-size: .85rem; font-weight: 800; color: #fff; flex-shrink: 0; overflow: hidden; }
+    .act-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .act-body { flex: 1; min-width: 0; }
+    .act-text { font-size: .84rem; color: var(--text); line-height: 1.4; }
+    .act-user { font-weight: 700; color: var(--orange); }
+    .act-target { font-weight: 600; color: var(--text); }
+    .act-link { color: var(--orange); text-decoration: none; font-weight: 600; }
+    .act-link:hover { text-decoration: underline; }
+    .act-time { font-size: .68rem; color: var(--text-muted); margin-top: 3px; }
+    .act-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center;
+      justify-content: center; flex-shrink: 0; }
+    .act-icon svg { width: 14px; height: 14px; fill: currentColor; }
+    .act-icon.upload { background: rgba(255,107,26,.12); color: var(--orange); }
+    .act-icon.follow { background: rgba(156,39,176,.12); color: #9c27b0; }
+    .act-empty { text-align: center; padding: 28px; color: var(--text-muted); font-size: .85rem; }
+
+    /* ── PWA INSTALL BANNER ── */
+    .install-banner { display: none; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px 16px; margin-bottom: 20px;
+      display: flex; align-items: center; gap: 12px; }
+    .install-banner.hidden { display: none !important; }
+    .install-banner-icon { width: 40px; height: 40px; background: var(--orange); border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .install-banner-icon svg { width: 22px; height: 22px; fill: #fff; }
+    .install-banner-text { flex: 1; }
+    .install-banner-text strong { font-size: .88rem; font-weight: 700; display: block; margin-bottom: 2px; }
+    .install-banner-text span { font-size: .75rem; color: var(--text-muted); }
+    .btn-install { background: var(--orange); color: #fff; border: none; border-radius: 10px;
+      padding: 8px 16px; font-size: .8rem; font-weight: 700; font-family: 'Inter',sans-serif;
+      cursor: pointer; white-space: nowrap; transition: background .2s; }
+    .btn-install:hover { background: var(--orange-dark); }
+    .btn-install-dismiss { background: none; border: none; color: var(--text-muted); cursor: pointer;
+      padding: 4px; font-size: 1.2rem; line-height: 1; }
+
+    @media (max-width: 600px) {
+      .profile-banner { height: 140px; }
+      .profile-meta-row { margin-top: 56px; }
+      .np-progress { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════ HEADER ══════════ -->
+<header>
+  <div class="header-inner">
+    <a href="/" class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+      </div>
+      <span class="logo-text">{{ app_name[:5] }}<span>{{ app_name[5:] }}</span></span>
+    </a>
+    <div class="header-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="Search…" />
+    </div>
+    <div class="h-actions">
+      <div class="pro-active-badge" id="pro-active-badge">
+        <svg viewBox="0 0 24 24"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+        Pro
+      </div>
+      {% if current_user %}
+        <button class="btn-pro" id="btn-go-pro" onclick="openProModal()">
+          <svg viewBox="0 0 24 24"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+          Go Pro
+        </button>
+        <div class="user-menu" id="user-menu">
+          <button class="user-trigger" onclick="toggleUserMenu()">
+            <div class="user-avatar-sm" style="background:{{ current_user.username | art_color }}">
+              {% if current_user.avatar %}
+                <img src="/static/avatars/{{ current_user.avatar }}" alt="{{ current_user.username }}" />
+              {% else %}
+                {{ current_user.username[0].upper() }}
+              {% endif %}
+            </div>
+            <span class="user-trigger-name">{{ current_user.username }}</span>
+            <svg class="user-caret" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+          </button>
+          <div class="user-dropdown">
+            <a href="/profile/{{ current_user.username }}">
+              <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+              My Profile
+            </a>
+            <a href="/">
+              <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+              Home
+            </a>
+            <form method="POST" action="/logout" style="margin:0">
+              <button type="submit" class="logout-btn">
+                <svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+                Sign Out
+              </button>
+            </form>
+          </div>
+        </div>
+      {% else %}
+        <button class="btn-pro" id="btn-go-pro" onclick="openProModal()">
+          <svg viewBox="0 0 24 24"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+          Go Pro
+        </button>
+        <a href="/auth" class="btn-signin">Sign In</a>
+      {% endif %}
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- ── PROFILE HERO ── -->
+  <div class="profile-banner">
+    <div class="profile-avatar-wrap">
+      <div class="profile-avatar-lg" {% if is_own %}onclick="openEditModal()" title="Click to edit profile"{% endif %}>
+        {% if profile_user.avatar %}
+          <img src="/static/avatars/{{ profile_user.avatar }}" alt="{{ profile_user.username }}" />
+        {% else %}
+          {{ profile_user.username[0].upper() }}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="profile-meta-row">
+    <div class="profile-info">
+      <h1>{{ profile_user.username }}</h1>
+      <div class="profile-joined">Joined {{ profile_user.joined_date }}</div>
+      <div class="profile-bio {% if not profile_user.bio %}empty{% endif %}">
+        {{ profile_user.bio or "No bio yet." }}
+      </div>
+    </div>
+    <div class="profile-actions">
+      {% if current_user and not is_own %}
+        <button class="btn-follow {% if i_follow %}following{% endif %}" id="follow-btn"
+                onclick="toggleFollow()">
+          {% if i_follow %}Following{% else %}Follow{% endif %}
+        </button>
+      {% elif is_own %}
+        <button class="btn-edit" onclick="openEditModal()">Edit Profile</button>
+      {% else %}
+        <a href="/auth" class="btn-signin" style="text-decoration:none">Sign in to Follow</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- stats -->
+  <div class="profile-stats">
+    <div class="pstat">
+      <span class="pstat-val" id="stat-followers">{{ followers }}</span>
+      <span class="pstat-label">Followers</span>
+    </div>
+    <div class="pstat">
+      <span class="pstat-val">{{ following }}</span>
+      <span class="pstat-label">Following</span>
+    </div>
+    <div class="pstat">
+      <span class="pstat-val">{{ songs | length }}</span>
+      <span class="pstat-label">Tracks</span>
+    </div>
+    <div class="pstat">
+      <span class="pstat-val">{{ total_plays }}</span>
+      <span class="pstat-label">Plays</span>
+    </div>
+  </div>
+
+  <!-- ── TRACKS ── -->
+  <h2 class="section-heading">
+    {% if is_own %}Your Tracks{% else %}{{ profile_user.username }}'s Tracks{% endif %}
+  </h2>
+
+  {% if songs %}
+  <div class="songs-grid">
+    {% for song in songs %}
+    {% set color = song.username | art_color %}
+    <div class="song-card" id="card-{{ loop.index0 }}" onclick="playSong({{ loop.index0 }})">
+      <div class="art-wrap">
+        <div class="art">
+          <div class="art-inner" style="background: linear-gradient(135deg, {{ color }}, #0d0d0f)">
+            <span>{{ song.name[0].upper() }}</span>
+          </div>
+          <div class="play-over">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+          <span class="genre-badge">{{ song.genre }}</span>
+        </div>
+      </div>
+      <div class="song-info">
+        <div class="song-name" title="{{ song.name }}">{{ song.name }}</div>
+        <div class="song-meta">
+          <span class="song-plays">▶ {{ song.play_count }}</span>
+          <span class="song-date">{{ song.upload_date }}</span>
+        </div>
+      </div>
+      <div class="song-actions" onclick="event.stopPropagation()">
+        <button class="icon-btn" id="like-{{ loop.index0 }}" onclick="toggleLike({{ loop.index0 }})" title="Like">
+          <svg viewBox="0 0 24 24"><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"/></svg>
+        </button>
+        <button class="icon-btn" onclick="openComments('{{ song.filename }}', '{{ song.name }}')" title="Comments">
+          <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+        </button>
+        <a class="icon-btn" href="/download/{{ song.filename }}" title="Download" onclick="event.stopPropagation()">
+          <svg viewBox="0 0 24 24"><path d="M5 20h14v-2H5v2zm7-18v10.17l-3.59-3.58L7 10l5 5 5-5-1.41-1.41L13 12.17V2h-1z"/></svg>
+        </a>
+        <button class="icon-btn" onclick="shareTrack('{{ song.filename }}', '{{ song.name }}')" title="Share">
+          <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
+        </button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-songs">
+    <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+    No tracks uploaded yet.
+  </div>
+  {% endif %}
+
+  <!-- ── DISCOVER OTHER USERS ── -->
+  <!-- ── ACTIVITY FEED ── -->
+  {% if activities %}
+  <h2 class="section-heading" style="margin-top:40px">Recent Activity</h2>
+  <div class="activity-feed">
+    {% for act in activities %}
+    <div class="activity-item">
+      <div class="act-av" style="background:{{ act.username | art_color }}">
+        {% if profile_user.avatar and act.user_id == profile_user.id %}
+          <img src="/static/avatars/{{ profile_user.avatar }}" alt="{{ act.username }}" />
+        {% else %}
+          {{ act.username[0].upper() }}
+        {% endif %}
+      </div>
+      <div class="act-body">
+        <div class="act-text">
+          <span class="act-user">{{ act.username }}</span>
+          {% if act.action_type == 'upload' %}
+            uploaded <span class="act-target">{{ act.payload.track_name or act.payload.get('filename','a track') }}</span>
+            <span style="color:var(--text-muted);font-size:.75rem"> · {{ act.payload.genre or '' }}</span>
+          {% elif act.action_type == 'follow' %}
+            started following
+            <a class="act-link" href="/profile/{{ act.payload.target_username }}">{{ act.payload.target_username }}</a>
+          {% else %}
+            did something
+          {% endif %}
+        </div>
+        <div class="act-time">{{ act.created_at }}</div>
+      </div>
+      <div class="act-icon {{ act.action_type }}">
+        {% if act.action_type == 'upload' %}
+          <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+        {% elif act.action_type == 'follow' %}
+          <svg viewBox="0 0 24 24"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if other_users %}
+  <h2 class="section-heading" style="margin-top:40px">Discover Artists</h2>
+  <div class="users-row">
+    {% for u in other_users %}
+    <a class="user-card" href="/profile/{{ u.username }}">
+      <div class="uc-av" style="background:{{ u.username | art_color }}">
+        {% if u.avatar %}<img src="/static/avatars/{{ u.avatar }}" alt="{{ u.username }}" />
+        {% else %}{{ u.username[0].upper() }}{% endif %}
+      </div>
+      <div>
+        <div class="uc-name">{{ u.username }}</div>
+        <div class="uc-meta">Joined {{ u.joined_date }}</div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+</main>
+
+<!-- ══════════ NOW PLAYING ══════════ -->
+<div class="now-playing" id="now-playing">
+  <div class="np-art" id="np-art" style="background:#2a2a32">
+    <svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:#8a8a9a"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+  </div>
+  <div class="np-info">
+    <div class="np-title" id="np-title">No track playing</div>
+    <div class="np-artist" id="np-artist">—</div>
+  </div>
+  <div class="np-progress">
+    <div class="progress-bar" id="progress-bar" onclick="seekTo(event)">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+    <div class="np-time-row">
+      <span class="np-time" id="np-current">0:00</span>
+      <span class="np-time" id="np-duration">0:00</span>
+    </div>
+  </div>
+  <div class="np-controls">
+    <button class="np-btn" onclick="prevTrack()" title="Previous"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg></button>
+    <button class="np-btn np-play" id="play-btn" onclick="togglePlay()">
+      <svg viewBox="0 0 24 24" id="play-icon"><path d="M8 5v14l11-7z"/></svg>
+    </button>
+    <button class="np-btn" onclick="nextTrack()" title="Next"><svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zm2.5-6 5.5 3.5-5.5 3.5V12zM16 6h2v12h-2z"/></svg></button>
+  </div>
+  <div class="np-right">
+    <div class="vol-row">
+      <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+      <input type="range" id="vol-slider" min="0" max="1" step="0.02" value="1" oninput="setVolume(this.value)" />
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ EDIT PROFILE MODAL ══════════ -->
+{% if is_own %}
+<div class="modal-overlay" id="edit-modal-overlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeEditModal()">
+      <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+    </button>
+    <h2>Edit Profile</h2>
+    <form method="POST" action="/profile/edit" enctype="multipart/form-data">
+      <label for="avatar-file" style="cursor:pointer">
+        <div class="avatar-preview" id="avatar-preview">
+          {% if profile_user.avatar %}
+            <img src="/static/avatars/{{ profile_user.avatar }}" id="avatar-img" alt="avatar" />
+          {% else %}
+            <span id="avatar-initials">{{ profile_user.username[0].upper() }}</span>
+          {% endif %}
+        </div>
+        <div class="avatar-upload-hint">Click avatar to change photo (JPG, PNG, WebP)</div>
+      </label>
+      <input type="file" id="avatar-file" name="avatar" accept="image/*" style="display:none" onchange="previewAvatar(this)" />
+      <div class="field">
+        <label>Bio</label>
+        <textarea name="bio" rows="3" maxlength="300" placeholder="Tell everyone about yourself…">{{ profile_user.bio or '' }}</textarea>
+      </div>
+      <button type="submit" class="btn-save">Save Changes</button>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+<!-- ══════════ COMMENTS MODAL ══════════ -->
+<div class="modal-overlay" id="comments-overlay">
+  <div class="modal comment-modal">
+    <button class="modal-close" onclick="closeComments()"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+    <h2>Comments</h2>
+    <div class="comment-track-name" id="comment-track-name"></div>
+    <div id="comment-list"></div>
+    <div class="comment-form">
+      {% if not current_user %}
+      <input type="text" id="comment-name" placeholder="Your name" maxlength="40" />
+      {% endif %}
+      <textarea id="comment-text" placeholder="Write a comment…" rows="2" maxlength="300"></textarea>
+      <button class="btn-comment" onclick="submitComment()">Post</button>
+    </div>
+  </div>
+</div>
+
+<!-- toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+const SONGS = {{ songs | tojson }};
+const IS_LOGGED_IN = {{ 'true' if current_user else 'false' }};
+const CURRENT_USER = {{ current_user.username | tojson if current_user else 'null' }};
+
+let currentIndex = -1;
+let audio = new Audio();
+let isPro = localStorage.getItem('sw_pro') === '1';
+
+// ── Pro state ────────────────────────────────────────────────────────────────
+function applyProState() {
+  const badge = document.getElementById('pro-active-badge');
+  const btn   = document.getElementById('btn-go-pro');
+  if (badge) badge.style.display = isPro ? 'flex' : 'none';
+  if (btn)   btn.style.display   = isPro ? 'none' : '';
+}
+applyProState();
+
+// ── Player ───────────────────────────────────────────────────────────────────
+function playSong(idx) {
+  if (idx < 0 || idx >= SONGS.length) return;
+  currentIndex = idx;
+  const s = SONGS[idx];
+  audio.src = `/music/${s.filename}`;
+  audio.play();
+  document.getElementById('np-title').textContent  = s.name;
+  document.getElementById('np-artist').textContent = s.username || s.artist;
+  const color = artColor(s.username || s.name);
+  document.getElementById('np-art').style.background = `linear-gradient(135deg, ${color}, #0d0d0f)`;
+  document.getElementById('np-art').textContent = (s.name[0] || '?').toUpperCase();
+  document.querySelectorAll('.song-card').forEach((c,i) => c.classList.toggle('playing', i===idx));
+  fetch(`/api/play/${encodeURIComponent(s.filename)}`, {method:'POST'});
+  updatePlayIcon();
+}
+
+function togglePlay() {
+  if (!audio.src) { if (SONGS.length) playSong(0); return; }
+  if (audio.paused) audio.play(); else audio.pause();
+  updatePlayIcon();
+}
+function updatePlayIcon() {
+  document.getElementById('play-icon').innerHTML = audio.paused
+    ? '<path d="M8 5v14l11-7z"/>'
+    : '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+}
+audio.addEventListener('ended', () => nextTrack());
+audio.addEventListener('timeupdate', () => {
+  if (!audio.duration) return;
+  const pct = (audio.currentTime / audio.duration) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('np-current').textContent  = fmtTime(audio.currentTime);
+  document.getElementById('np-duration').textContent = fmtTime(audio.duration);
+});
+audio.addEventListener('play',  updatePlayIcon);
+audio.addEventListener('pause', updatePlayIcon);
+
+function prevTrack() { if (currentIndex > 0) playSong(currentIndex - 1); }
+function nextTrack() {
+  const next = currentIndex + 1;
+  if (next < SONGS.length) playSong(next);
+}
+function seekTo(e) {
+  if (!audio.duration) return;
+  const rect = e.currentTarget.getBoundingClientRect();
+  audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
+}
+function setVolume(v) { audio.volume = parseFloat(v); }
+function fmtTime(s) {
+  if (!isFinite(s)) return '0:00';
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60).toString().padStart(2,'0');
+  return `${m}:${sec}`;
+}
+
+// ── Art color ─────────────────────────────────────────────────────────────────
+const palette = ['#ff6b1a','#9c27b0','#e91e63','#00bcd4','#4caf50','#f5c518','#ff5722','#3f51b5','#009688','#ff9800'];
+function artColor(name) {
+  let h = 0; for (const c of (name||'?')) h = c.charCodeAt(0) + ((h<<5)-h);
+  return palette[Math.abs(h) % palette.length];
+}
+
+// ── Likes ─────────────────────────────────────────────────────────────────────
+let likes = JSON.parse(localStorage.getItem('sw_likes') || '{}');
+function saveLikes() { localStorage.setItem('sw_likes', JSON.stringify(likes)); }
+function toggleLike(idx) {
+  const s  = SONGS[idx];
+  const key = s.filename;
+  likes[key] = !likes[key];
+  saveLikes();
+  const btn = document.getElementById('like-' + idx);
+  if (btn) btn.classList.toggle('liked', !!likes[key]);
+}
+document.querySelectorAll('.song-card').forEach((_, i) => {
+  const s = SONGS[i];
+  if (likes[s.filename]) {
+    const b = document.getElementById('like-' + i);
+    if (b) b.classList.add('liked');
+  }
+});
+
+// ── Share ─────────────────────────────────────────────────────────────────────
+function shareTrack(fn, name) {
+  const url = `${location.origin}/music/${encodeURIComponent(fn)}`;
+  navigator.clipboard.writeText(url).then(() => showToast(`Link copied: ${name}`));
+}
+
+// ── Follow ───────────────────────────────────────────────────────────────────
+let following = {{ 'true' if i_follow else 'false' }};
+async function toggleFollow() {
+  const res  = await fetch('/api/user/follow/{{ profile_user.username }}', {method:'POST'});
+  if (res.status === 401) { location.href = '/auth'; return; }
+  const data = await res.json();
+  following = data.following;
+  const btn = document.getElementById('follow-btn');
+  btn.textContent = following ? 'Following' : 'Follow';
+  btn.classList.toggle('following', following);
+  document.getElementById('stat-followers').textContent = data.followers;
+}
+
+// ── Edit modal ────────────────────────────────────────────────────────────────
+function openEditModal() { document.getElementById('edit-modal-overlay').classList.add('open'); }
+function closeEditModal() { document.getElementById('edit-modal-overlay').classList.remove('open'); }
+function previewAvatar(input) {
+  if (!input.files || !input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const p = document.getElementById('avatar-preview');
+    p.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;display:block" />`;
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+// ── Comments ─────────────────────────────────────────────────────────────────
+let commentFile = '', commentName = '';
+function openComments(fn, name) {
+  commentFile = fn; commentName = name;
+  document.getElementById('comment-track-name').textContent = name;
+  document.getElementById('comments-overlay').classList.add('open');
+  loadComments();
+}
+function closeComments() { document.getElementById('comments-overlay').classList.remove('open'); }
+async function loadComments() {
+  const list = document.getElementById('comment-list');
+  list.innerHTML = '<p style="color:var(--text-muted);font-size:.8rem">Loading…</p>';
+  const res  = await fetch(`/api/comments/${encodeURIComponent(commentFile)}`);
+  const data = await res.json();
+  list.innerHTML = data.length ? '' : '<p style="color:var(--text-muted);font-size:.8rem">No comments yet.</p>';
+  data.forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'comment-item';
+    el.innerHTML = `<div class="comment-author">${c.name} <span class="comment-ts">${c.ts}</span></div><div class="comment-text">${c.text}</div>`;
+    list.appendChild(el);
+  });
+}
+async function submitComment() {
+  const nameEl = document.getElementById('comment-name');
+  const name   = IS_LOGGED_IN ? CURRENT_USER : (nameEl ? nameEl.value.trim() : 'Anonymous') || 'Anonymous';
+  const text   = document.getElementById('comment-text').value.trim();
+  if (!text) return;
+  await fetch(`/api/comments/${encodeURIComponent(commentFile)}`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({name, text})
+  });
+  document.getElementById('comment-text').value = '';
+  loadComments();
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+// ── User menu ─────────────────────────────────────────────────────────────────
+function toggleUserMenu() { document.getElementById('user-menu')?.classList.toggle('open'); }
+document.addEventListener('click', e => {
+  const m = document.getElementById('user-menu');
+  if (m && !m.contains(e.target)) m.classList.remove('open');
+});
+
+// Pro modal stub
+function openProModal() {}
+
+// ── Service Worker + PWA Install ──────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/static/sw.js').catch(() => {});
+}
+
+let _deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _deferredPrompt = e;
+  const banner = document.getElementById('install-banner');
+  if (banner) banner.classList.remove('hidden');
+});
+
+function installApp() {
+  if (_deferredPrompt) {
+    _deferredPrompt.prompt();
+    _deferredPrompt.userChoice.finally(() => { _deferredPrompt = null; });
+    document.getElementById('install-banner')?.classList.add('hidden');
+  }
+}
+
+function dismissInstall() {
+  document.getElementById('install-banner')?.classList.add('hidden');
+  localStorage.setItem('sw_install_dismissed', '1');
+}
+
+if (localStorage.getItem('sw_install_dismissed')) {
+  document.getElementById('install-banner')?.classList.add('hidden');
+}
+</script>
+</body>
+</html>

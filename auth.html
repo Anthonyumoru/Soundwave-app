@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ app_name }} — Sign In</title>
+  <link rel="manifest" href="/static/manifest.json" />
+  <meta name="theme-color" content="#ff6b1a" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <link rel="apple-touch-icon" href="/icon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d0d0f; --surface: #17171b; --surface-hover: #1f1f25;
+      --border: #2a2a32; --orange: #ff6b1a; --orange-dark: #d95400;
+      --orange-glow: rgba(255,107,26,.18); --text: #f0f0f4; --text-muted: #8a8a9a;
+      --radius: 14px; --red: #ff4040;
+    }
+    body {
+      font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text);
+      min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 24px;
+    }
+    /* background blobs */
+    body::before, body::after {
+      content: ''; position: fixed; border-radius: 50%; pointer-events: none; z-index: 0;
+    }
+    body::before {
+      width: 500px; height: 500px; top: -160px; left: -160px;
+      background: radial-gradient(circle, rgba(255,107,26,.12) 0%, transparent 70%);
+    }
+    body::after {
+      width: 400px; height: 400px; bottom: -120px; right: -100px;
+      background: radial-gradient(circle, rgba(156,39,176,.1) 0%, transparent 70%);
+    }
+
+    .auth-wrap { position: relative; z-index: 1; width: 100%; max-width: 420px; }
+
+    /* logo */
+    .auth-logo { display: flex; align-items: center; gap: 10px; justify-content: center; margin-bottom: 36px; text-decoration: none; }
+    .auth-logo-icon { width: 44px; height: 44px; background: var(--orange); border-radius: 12px;
+      display: flex; align-items: center; justify-content: center; }
+    .auth-logo-icon svg { width: 24px; height: 24px; fill: #fff; }
+    .auth-logo-text { font-size: 1.5rem; font-weight: 800; letter-spacing: -.5px; color: var(--text); }
+    .auth-logo-text span { color: var(--orange); }
+
+    /* card */
+    .auth-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 32px; }
+
+    /* tabs */
+    .auth-tabs { display: flex; gap: 4px; background: var(--bg); border-radius: 10px; padding: 4px; margin-bottom: 28px; }
+    .auth-tab { flex: 1; padding: 9px; text-align: center; font-size: .85rem; font-weight: 600;
+      border: none; background: none; color: var(--text-muted); border-radius: 7px; cursor: pointer;
+      font-family: 'Inter', sans-serif; transition: background .2s, color .2s; }
+    .auth-tab.active { background: var(--surface-hover); color: var(--text); }
+    .auth-tab:hover:not(.active) { color: var(--text); }
+
+    /* form panels */
+    .auth-panel { display: none; }
+    .auth-panel.active { display: block; }
+
+    /* fields */
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: .75rem; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+    .field input { width: 100%; background: var(--surface-hover); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 14px; font-size: .9rem; font-family: 'Inter', sans-serif;
+      color: var(--text); outline: none; transition: border-color .2s, box-shadow .2s; }
+    .field input::placeholder { color: var(--text-muted); }
+    .field input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px var(--orange-glow); }
+
+    /* error */
+    .auth-error { background: rgba(255,64,64,.1); border: 1px solid rgba(255,64,64,.35);
+      border-radius: 10px; padding: 10px 14px; font-size: .82rem; color: var(--red);
+      margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .auth-error svg { width: 14px; height: 14px; fill: currentColor; flex-shrink: 0; }
+
+    /* submit */
+    .btn-auth { width: 100%; background: var(--orange); color: #fff; border: none; border-radius: 12px;
+      padding: 13px; font-size: .925rem; font-weight: 700; font-family: 'Inter', sans-serif;
+      cursor: pointer; transition: background .2s, box-shadow .2s; margin-top: 4px; }
+    .btn-auth:hover { background: var(--orange-dark); box-shadow: 0 4px 20px rgba(255,107,26,.35); }
+
+    /* divider */
+    .auth-divider { display: flex; align-items: center; gap: 10px; font-size: .72rem;
+      color: var(--text-muted); margin: 20px 0 0; }
+    .auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    /* footer */
+    .auth-footer { text-align: center; margin-top: 24px; font-size: .8rem; color: var(--text-muted); }
+    .auth-footer a { color: var(--orange); text-decoration: none; font-weight: 600; }
+    .auth-footer a:hover { text-decoration: underline; }
+
+    .switch-hint { text-align: center; font-size: .8rem; color: var(--text-muted); margin-top: 18px; }
+    .switch-hint a { color: var(--orange); text-decoration: none; font-weight: 600; cursor: pointer; }
+  </style>
+</head>
+<body>
+<div class="auth-wrap">
+  <a href="/" class="auth-logo">
+    <div class="auth-logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+    </div>
+    <span class="auth-logo-text">{{ app_name[:5] }}<span>{{ app_name[5:] }}</span></span>
+  </a>
+
+  <div class="auth-card">
+    <div class="auth-tabs">
+      <button class="auth-tab {% if tab != 'signup' %}active{% endif %}" onclick="switchTab('signin')" id="tab-signin">Sign In</button>
+      <button class="auth-tab {% if tab == 'signup' %}active{% endif %}" onclick="switchTab('signup')" id="tab-signup">Join Free</button>
+    </div>
+
+    <!-- SIGN IN -->
+    <div class="auth-panel {% if tab != 'signup' %}active{% endif %}" id="panel-signin">
+      {% with msgs = get_flashed_messages(category_filter=['signin_error']) %}
+        {% if msgs %}
+        <div class="auth-error">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+          {{ msgs[0] }}
+        </div>
+        {% endif %}
+      {% endwith %}
+      <form method="POST" action="/auth">
+        <input type="hidden" name="action" value="signin" />
+        <div class="field">
+          <label>Username or Email</label>
+          <input type="text" name="identifier" placeholder="Enter your username or email" autocomplete="username" required />
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" name="password" placeholder="Enter your password" autocomplete="current-password" required />
+        </div>
+        <button type="submit" class="btn-auth">Sign In</button>
+      </form>
+      <div class="switch-hint">Don't have an account? <a onclick="switchTab('signup')">Join free</a></div>
+    </div>
+
+    <!-- SIGN UP -->
+    <div class="auth-panel {% if tab == 'signup' %}active{% endif %}" id="panel-signup">
+      {% with msgs = get_flashed_messages(category_filter=['signup_error']) %}
+        {% if msgs %}
+        <div class="auth-error">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+          {{ msgs[0] }}
+        </div>
+        {% endif %}
+      {% endwith %}
+      <form method="POST" action="/auth">
+        <input type="hidden" name="action" value="signup" />
+        <div class="field">
+          <label>Username</label>
+          <input type="text" name="username" placeholder="Choose a username" minlength="3" maxlength="30" autocomplete="username" required />
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" name="email" placeholder="your@email.com" autocomplete="email" required />
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" name="password" placeholder="At least 6 characters" minlength="6" autocomplete="new-password" required />
+        </div>
+        <div class="field">
+          <label>Confirm Password</label>
+          <input type="password" name="confirm" placeholder="Repeat your password" autocomplete="new-password" required />
+        </div>
+        <button type="submit" class="btn-auth">Create Account</button>
+      </form>
+      <div class="switch-hint">Already have an account? <a onclick="switchTab('signin')">Sign in</a></div>
+    </div>
+  </div>
+
+  <div class="auth-footer">
+    <a href="/">← Back to {{ app_name }}</a>
+  </div>
+</div>
+<script>
+function switchTab(tab) {
+  document.getElementById('panel-signin').classList.toggle('active', tab === 'signin');
+  document.getElementById('panel-signup').classList.toggle('active', tab === 'signup');
+  document.getElementById('tab-signin').classList.toggle('active', tab === 'signin');
+  document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+}
+</script>
+</body>
+</html>
