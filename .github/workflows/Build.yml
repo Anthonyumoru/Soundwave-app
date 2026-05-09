@@ -1,0 +1,33 @@
+name: Build APK
+
+on:
+  push:
+    branches: 
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: |
+        pip install buildozer cython
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        
+    - name: Build APK
+      run: buildozer android debug
+      
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: soundwave-apk
+        path: bin/*.apk
